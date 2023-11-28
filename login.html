@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <title>Gerenciar Tarefas - Login</title>
+  <script src="js/login.js" type="module" ></script>
+  <!-- <script src="js/model/User.js" type="module" ></script>
+  <script src="js/services/UserService.js" type="module" ></script> -->
+</head>
+<body>
+
+  <main class="container d-flex min-vh-100 min-vw-100 gap-5 ">
+    <section class="w-100 d-flex align-content-center justify-content-center flex-wrap ">
+      <img src="/images/task-registration-2081679-1756042.webp" alt="Registrar-se">
+    </section>
+
+    <section style="max-width: 800px;" class="w-100 d-flex flex-column justify-content-center p-8">
+      <h2>Bem vindo, ao Gerenciador de Tarefas</h2>
+      <form id="form-login"  class="my-4">
+        <p>Acesse sua conta: </p>
+        <input id="login-email" type="text" class="form-control my-2" placeholder="E-mail" aria-label="E-mail" required>
+        <input id="login-password" type="password" class="form-control my-2" placeholder="Senha" aria-label="Senha" required>
+        <p id="invalid-login-credentials" class="text-danger" style="display: none;" >E-mail ou senha incorretos, tente novamente.</p>
+        <input type="submit" class="btn btn-primary" value="Entrar"/>
+      </form>
+
+      <form id="form-register" class="my-4">
+        <p>Novo por aqui? Crie sua conta: </p>
+        <div>
+          <input id="register-name" type="text" class="form-control my-2" placeholder="Nome" aria-label="Nome" required>
+          <div class="invalid-feedback"></div>
+        </div>
+        <div>
+          <input id="register-email" type="text" class="form-control my-2" placeholder="E-mail" aria-label="E-mail" required>
+          <div class="invalid-feedback">dwdwsad</div>
+        </div>
+
+        <div>
+          <input id="register-password" type="password" class="form-control my-2" placeholder="Senha" aria-label="Senha" required>
+          <div class="invalid-feedback"></div>
+        </div>
+        <input type="submit" class="btn btn-primary" value="Registrar-se"/>
+      </form>
+    </section>
+  </main>
+
+</body>
+</html>
