@@ -28,7 +28,7 @@ function formsSubmit() {
 
     UserService.loginUser(user.email)
 
-    window.location.href = "index.html";
+    window.location.href = "index.html"
   }
 
   document.getElementById("form-register").onsubmit = function(e) {
@@ -39,8 +39,11 @@ function formsSubmit() {
     let password = passwordRegisterInput.value
 
     let errors = UserService.validateUserData(name, email, password)
+    console.log(errors)
+    console.log(errors.email.length, errors.name.length, errors.password.length)
+    console.log(errors.email.length > 0 || errors.name.length > 0 || errors.password.length > 0)
 
-    if (Object.keys(errors).length > 0) {
+    if (errors.email.length > 0 || errors.name.length > 0 || errors.password.length > 0) {
       throw new Error("Credenciais inválidas")
     }
 

@@ -1,12 +1,23 @@
 class UserService {
-  static getUser() {
+  static getUsers() {
     return JSON.parse(localStorage.getItem("users"))
   }
 
-  static addUser(user) {
-    let users = this.getUser()
+  static getUser(email) {
+    let users = this.getUsers()
+    let user = users.find(user => {
+      if (user.email === email) {
+        return user
+      }
+    });
 
-    if (!users.length) {
+    return user
+  }
+
+  static addUser(user) {
+    let users = this.getUsers()
+
+    if (!user || !users?.length) {
       localStorage.setItem("users", JSON.stringify([user]))
     } else {
       localStorage.setItem("users", JSON.stringify([...users, user]))
@@ -14,9 +25,7 @@ class UserService {
   }
 
   static verifyCredentials(email, password) {
-    let users = this.getUser()
-
-    console.log(users)
+    let users = this.getUsers()
 
     let user = users.find(user => {
       if (user.email === email && user.password === password) {
@@ -29,6 +38,10 @@ class UserService {
 
   static loginUser(email) {
     localStorage.setItem("session", email)
+  }
+
+  static getSession() {
+    return localStorage.getItem("session")
   }
 
   static logoutUser() {
