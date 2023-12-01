@@ -14,7 +14,7 @@ class TaskService {
     }
 
     let tasks = tasksJSON.map(task => {
-      return new Task(task.id, task.name, new Date(task.startDate), new Date(task.endDate), task.description, email)
+      return new Task(task.id, task.name, new Date(task.startDate), new Date(task.endDate), task.description, email, task._status)
     })
     
     
@@ -22,16 +22,16 @@ class TaskService {
   }
 
   static getTaskFromId(email, id) {
-    let tasksJSON = JSON.parse(localStorage.getItem(email))
+    let tasks = this.getTasksFromUser(email)
     /* 
       Como o JSON.parse não instância objetos date, preciso percorrer as tasks e instanciar elas como Task
      */
 
-    let task = tasksJSON.find((task) => task.id === id)
+    let task = tasks.find((task) => task.id === id)
 
     if (!task) return undefined
 
-    return new Task(id, task.name, new Date(task.startDate), new Date(task.endDate), task.description, email)
+    return task
   }
 
   static addTask(task) {
@@ -42,13 +42,13 @@ class TaskService {
     this._updateTasks(task.userEmail, tasks)
   }
 
-  static removeTask(taskToRemove) {
-    const tasks = this.getTasksFromUser(taskToRemove.userEmail)
-    const indexToRemove = tasks.findIndex(task => task.id === taskToRemove.id)
+  static removeTask(taskId, email) {
+    const tasks = this.getTasksFromUser(email)
+    const indexToRemove = tasks.findIndex(task => task.id === taskId)
 
     if (indexToRemove !== -1) {
       tasks.splice(indexToRemove, 1)
-      this._updateTasks(taskToRemove.userEmail, tasks)
+      this._updateTasks(email, tasks)
     } else {
       console.log('Tarefa não encontrada.')
     }
@@ -58,11 +58,35 @@ class TaskService {
     const tasks = this.getTasksFromUser(updatedTask.userEmail)
     const indexToEdit = tasks.findIndex(task => task.id === updatedTask.id)
 
-    console.log(updatedTask, tasks, indexToEdit)
-
     if (indexToEdit !== -1) {
       tasks[indexToEdit] = updatedTask
       this._updateTasks(updatedTask.userEmail, tasks)
+    } else {
+      console.log('Tarefa não encontrada.')
+    }
+  }
+
+  static setCompleteTask(taskId, email) {
+    
+    const tasks = this.getTasksFromUser(email)
+    const indexToComplete = tasks.findIndex(task => task.id === taskId)
+
+    if (indexToComplete !== -1) {
+      tasks[indexToComplete]._status = 'Realizada'
+      this._updateTasks(email, tasks)
+    } else {
+      console.log('Tarefa não encontrada.')
+    }
+  }
+
+  static undoCompleteTask(taskId, email) {
+    
+    const tasks = this.getTasksFromUser(email)
+    const indexToUndo = tasks.findIndex(task => task.id === taskId)
+
+    if (indexToUndo !== -1) {
+      tasks[indexToUndo]._status = ''
+      this._updateTasks(email, tasks)
     } else {
       console.log('Tarefa não encontrada.')
     }

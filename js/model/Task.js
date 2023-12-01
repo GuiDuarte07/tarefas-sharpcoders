@@ -1,12 +1,12 @@
 class Task {
-  constructor(id, name, startDate, endDate, description, userEmail){
+  constructor(id, name, startDate, endDate, description, userEmail, status){
     this.id = id
     this.name = name
     this.startDate = startDate
     this.endDate = endDate
     this.description = description
     this.userEmail = userEmail
-    this._status = ''
+    this._status = status
     this.status()
   }
 

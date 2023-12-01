@@ -2,12 +2,17 @@
 import User from "./model/User.js"
 import UserService from "./services/UserService.js"
 
+let userEmail = UserService.getSession()
+// Caso tenha sessão ativa, o usuário é redirecionado para a tela de entrada
+if (userEmail) {
+  window.location.href = 'index.html'
+}
+
+
 let nameRegisterInput = document.getElementById("register-name")
 let emailRegisterInput = document.getElementById("register-email")
 let passwordRegisterInput = document.getElementById("register-password")
 let invalidLoginCredentialsText = document.getElementById("invalid-login-credentials")
-
-console.log(nameRegisterInput)
 
 function formsSubmit() {
   let loginForm = document.getElementById("form-login")

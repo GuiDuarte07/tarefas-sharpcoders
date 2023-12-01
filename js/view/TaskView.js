@@ -1,3 +1,7 @@
+import Task from "../model/Task.js"
+import TaskService from "../services/TaskService.js"
+import UserService from "../services/UserService.js"
+
 class TaskView {
   static generateTable(tasks) {
     let tableBody = document.getElementById("taskTableBody")
@@ -52,10 +56,11 @@ class TaskView {
           tdStatus.classList.add('text-danger')
           break
         case 'Realizada':
-          tdStatus.classList.add('text-sucess')
+          tdStatus.classList.add('text-success')
           break
       }
 
+      // Botão de Alterar task e sua lógica
       const tdEdit = document.createElement('td')
       const btnEdit = document.createElement('button')
       btnEdit.textContent = 'Alterar'
@@ -63,7 +68,7 @@ class TaskView {
       btnEdit.setAttribute('data-bs-toggle', 'modal')
       btnEdit.setAttribute('data-bs-target', '#editTask')
       btnEdit.type = 'button'
-      btnEdit.onclick = (event) => this.editModal(task)
+      btnEdit.onclick = () => this.editModal(task)
       tdEdit.appendChild(btnEdit)
 
       
@@ -95,6 +100,8 @@ class TaskView {
     editTaskEndDateInput.value = endDate
     editTaskEndHourInput.value = endHour
     editTaskDescriptionInput.value = task.description
+
+    this.editTaskHandle()
   }
 
   static getTaskFromEdit() {
@@ -112,6 +119,43 @@ class TaskView {
       editTaskEndDate,
       editTaskEndHour,
       editTaskDescription,
+    }
+  }
+
+  static editTaskHandle() {
+    let userEmail = UserService.getSession()
+    let editTaskBtn = document.getElementById("editTaskBtn")
+    let completeTaskBtn =  document.getElementById("completeTaskBtn")
+    let deleteTaskBtn =  document.getElementById("deleteTaskBtn")
+  
+    let taskId = document.getElementById("editTaskBtn").getAttribute('data-id')
+    let task = TaskService.getTaskFromId(userEmail, taskId)
+    if (task.status() === 'Realizada') {
+      completeTaskBtn.textContent = 'Marcar como Não Realizada'
+      completeTaskBtn.onclick = () => TaskService.undoCompleteTask(taskId, userEmail)
+    } else {
+      completeTaskBtn.textContent = 'Marcar como Realizada'
+      completeTaskBtn.onclick = () => TaskService.setCompleteTask(taskId, userEmail)
+    }
+  
+    deleteTaskBtn.onclick = () => TaskService.removeTask(taskId, userEmail)
+  
+    editTaskBtn.onclick = () => {
+      let {
+        editTaskName,
+        editTaskStartDate,
+        editTaskStartHour,
+        editTaskEndDate,
+        editTaskEndHour,
+        editTaskDescription
+      } = TaskView.getTaskFromEdit()
+  
+      let editTaskStartDatetime = TaskView.dateAndHourToDatehour(editTaskStartDate, editTaskStartHour)
+      let editTaskEndDatetime = TaskView.dateAndHourToDatehour(editTaskEndDate, editTaskEndHour)
+      
+      let editTask = new Task(taskId, editTaskName, editTaskStartDatetime, editTaskEndDatetime, editTaskDescription, userEmail, task.status())
+  
+      TaskService.editTask(editTask)
     }
   }
 

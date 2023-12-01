@@ -35,17 +35,25 @@ createTaskForm.onsubmit = (e) => {
   TaskService.addTask(task)
 }
 
-function editTaskHandle() {
+/* function editTaskHandle() {
   let editTaskBtn = document.getElementById("editTaskBtn")
   let completeTaskBtn =  document.getElementById("completeTaskBtn")
   let deleteTaskBtn =  document.getElementById("deleteTaskBtn")
 
- 
+  let taskId = document.getElementById("editTaskBtn").getAttribute('data-id')
+  let task = TaskService.getTaskFromId(userEmail, taskId)
+  
+  if (task.status() === 'Realizada') {
+    completeTaskBtn.textContent = 'Marcar como Não Realizada'
+    completeTaskBtn.onclick = () => TaskService.setCompleteTask(taskId, userEmail)
+  } else {
+    completeTaskBtn.textContent = 'Marcar como Realizada'
+    completeTaskBtn.onclick = () => TaskService.undoCompleteTask(taskId, userEmail)
+  }
+
+  deleteTaskBtn.onclick = () => TaskService.removeTask(taskId, userEmail)
 
   editTaskBtn.onclick = () => {
-    let taskId = document.getElementById("editTaskBtn").getAttribute('data-id')
-    //let task = TaskService.getTaskFromId(userEmail, taskId)
-
     let {
       editTaskName,
       editTaskStartDate,
@@ -64,4 +72,4 @@ function editTaskHandle() {
   }
 }
 
-editTaskHandle()
+editTaskHandle() */
