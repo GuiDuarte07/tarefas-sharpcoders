@@ -1,6 +1,7 @@
 //JS para controlar login e sign-in
 import User from "./model/User.js"
 import UserService from "./services/UserService.js"
+import showToast from "./utils/toasts.js"
 
 let userEmail = UserService.getSession()
 // Caso tenha sessão ativa, o usuário é redirecionado para a tela de entrada
@@ -18,7 +19,6 @@ function formsSubmit() {
   let loginForm = document.getElementById("form-login")
   loginForm.onsubmit = function(e) {
     e.preventDefault()
-    console.log(e)
     
     let email = document.getElementById("login-email").value
     let password = document.getElementById("login-password").value
@@ -44,17 +44,31 @@ function formsSubmit() {
     let password = passwordRegisterInput.value
 
     let errors = UserService.validateUserData(name, email, password)
-    console.log(errors)
-    console.log(errors.email.length, errors.name.length, errors.password.length)
-    console.log(errors.email.length > 0 || errors.name.length > 0 || errors.password.length > 0)
 
     if (errors.email.length > 0 || errors.name.length > 0 || errors.password.length > 0) {
       throw new Error("Credenciais inválidas")
     }
 
+    let users = UserService.getUsers()
+
+
+    for(let user of users) {
+      console.log(user, email)
+      if (user.email === email) {
+        showToast('Conta já existente, use outro e-mail', 'text-bg-danger')
+        return
+      }
+    }
+
     let user = new User(name, email, password)
 
     UserService.addUser(user)
+
+    nameRegisterInput.value = ''
+    emailRegisterInput.value = ''
+    passwordRegisterInput.value = ''
+
+    showToast('Conta criada com sucesso, faça login', 'text-bg-success')
   }
 }
 

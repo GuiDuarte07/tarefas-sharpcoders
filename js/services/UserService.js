@@ -41,7 +41,10 @@ class UserService {
   }
 
   static getSession() {
-    return localStorage.getItem("session")
+    let userEmail = localStorage.getItem("session")
+
+    if (userEmail === 'null') return null
+    return userEmail
   }
 
   static logoutUser() {

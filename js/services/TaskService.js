@@ -1,8 +1,11 @@
 import Task from "../model/Task.js"
-import TaskView from "../view/TaskView.js"
 
 class TaskService {
-  static getTasksFromUser(email) {
+  constructor(userEmail) {
+    this.userEmail = userEmail
+    this.tasks = this.renderTasksFromUser(userEmail)
+  }
+  renderTasksFromUser(email) {
     let tasksJSON = JSON.parse(localStorage.getItem(email))
     /* 
       Como o JSON.parse não instância objetos date, preciso percorrer as tasks e instanciar elas como Task
@@ -13,103 +16,182 @@ class TaskService {
       return []
     }
 
-    let tasks = tasksJSON.map(task => {
+    this.tasks = tasksJSON.map(task => {
       return new Task(task.id, task.name, new Date(task.startDate), new Date(task.endDate), task.description, email, task._status)
     })
     
-    
-    return tasks
+    return this.tasks
   }
 
-  static getTaskFromId(email, id) {
-    let tasks = this.getTasksFromUser(email)
-    /* 
-      Como o JSON.parse não instância objetos date, preciso percorrer as tasks e instanciar elas como Task
-     */
-
-    let task = tasks.find((task) => task.id === id)
+  getTaskFromId(id) {
+    let task = this.tasks.find((task) => task.id === id)
 
     if (!task) return undefined
 
     return task
   }
 
-  static addTask(task) {
+  addTask(task) {
+    let error = this.validateTask(task.name, task.startDate, task.endDate)
+    if (error) return error
+    
     let id = this._generateRandomId()
     task.id = id
-    let tasks = this.getTasksFromUser(task.userEmail)
-    tasks.push(task)
-    this._updateTasks(task.userEmail, tasks)
+    this.tasks.push(task)
+    this._updateTasks()
   }
 
-  static removeTask(taskId, email) {
-    const tasks = this.getTasksFromUser(email)
-    const indexToRemove = tasks.findIndex(task => task.id === taskId)
+  removeTask(taskId) {
+    const indexToRemove = this.tasks.findIndex(task => task.id === taskId)
 
     if (indexToRemove !== -1) {
-      tasks.splice(indexToRemove, 1)
-      this._updateTasks(email, tasks)
+      this.tasks.splice(indexToRemove, 1)
+      this._updateTasks()
     } else {
-      console.log('Tarefa não encontrada.')
+      throw new Error('Tarefa não encontrada.')
     }
   }
 
-  static editTask(updatedTask) {
-    const tasks = this.getTasksFromUser(updatedTask.userEmail)
-    const indexToEdit = tasks.findIndex(task => task.id === updatedTask.id)
+  editTask(updatedTask) {
+    const indexToEdit = this.tasks.findIndex(task => task.id === updatedTask.id)
 
     if (indexToEdit !== -1) {
-      tasks[indexToEdit] = updatedTask
-      this._updateTasks(updatedTask.userEmail, tasks)
+      this.tasks[indexToEdit] = updatedTask
+      this._updateTasks()
     } else {
-      console.log('Tarefa não encontrada.')
+      throw new Error('Tarefa não encontrada.')
     }
   }
 
-  static setCompleteTask(taskId, email) {
-    
-    const tasks = this.getTasksFromUser(email)
-    const indexToComplete = tasks.findIndex(task => task.id === taskId)
+  setCompleteTask(taskId) {
+    const indexToComplete = this.tasks.findIndex(task => task.id === taskId)
 
     if (indexToComplete !== -1) {
-      tasks[indexToComplete]._status = 'Realizada'
-      this._updateTasks(email, tasks)
+      this.tasks[indexToComplete]._status = 'Realizada'
+      this._updateTasks()
     } else {
-      console.log('Tarefa não encontrada.')
+      throw new Error('Tarefa não encontrada.')
     }
   }
 
-  static undoCompleteTask(taskId, email) {
-    
-    const tasks = this.getTasksFromUser(email)
-    const indexToUndo = tasks.findIndex(task => task.id === taskId)
+  undoCompleteTask(taskId) {
+    const indexToUndo = this.tasks.findIndex(task => task.id === taskId)
 
     if (indexToUndo !== -1) {
-      tasks[indexToUndo]._status = ''
-      this._updateTasks(email, tasks)
+      this.tasks[indexToUndo]._status = ''
+      this._updateTasks()
     } else {
-      console.log('Tarefa não encontrada.')
+      throw new Error('Tarefa não encontrada.')
     }
   }
 
-  static refreshTaks(email) {
-    this._updateTasks(email, this.getTasksFromUser(email))
-  }
-
-  /* 
-    Em tese teria um controller que repeceria os dados da taskService (ou repository) e depois enviaria
-    para o a view, porém como não tenho um taskController, a responsabilidade de alterar a view estou 
-    enviando para o TaskService através desse metódo privado. Assim, eu não preciso me preocupar em 
-    executar a view sempre que usar o TaskService
-   */
-  static _updateTasks(email, tasks) {
+  _updateTasks() {
     // Salvo as alterações no localstorage
-    localStorage.setItem(email, JSON.stringify(tasks))
-    // Gera uma alteração na VIEW
-    TaskView.generateTable(tasks)
+    localStorage.setItem(this.userEmail, JSON.stringify(this.tasks))
   }
 
-  static _generateRandomId() {
+  validateTask(name, startDate, endDate) {
+    if (!name || name.length < 2) return 'Nome inválido'
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 'Data inválida'
+
+    if(endDate < startDate) return 'Data de fim precisa ser maior que data de início'
+
+    return null
+  }
+
+  orderByTitle(order) {
+    if (order === 'DEC') {
+      this.tasks.sort((a, b) => {
+        const nameA = a.name.toUpperCase() 
+        const nameB = b.name.toUpperCase()
+        
+        if (nameA > nameB) {
+          return -1
+        }
+        if (nameA < nameB) {
+          return 1
+        }
+        return 0
+      })
+    } else if (order === 'ASC') {
+      this.tasks.sort((a, b) => {
+        const nameA = a.name.toUpperCase() 
+        const nameB = b.name.toUpperCase()
+        
+        if (nameA < nameB) {
+          return -1
+        }
+        if (nameA > nameB) {
+          return 1
+        }
+        return 0
+      })
+    } else {
+      throw new Error('filtro não esperado')
+    }
+    
+  }
+
+  orderByDate(order) {
+    if (order === 'ASC') {
+      this.tasks.sort((a, b) => {
+        const dateA = new Date(a.startDate)
+        const dateB = new Date(b.startDate)
+    
+        return dateA - dateB
+      })
+    } else if (order === 'DEC') {
+      this.tasks.sort((a, b) => {
+        const dateA = new Date(a.startDate)
+        const dateB = new Date(b.startDate)
+    
+        return dateB - dateA
+      })
+    } else {
+      throw new Error('filtro não esperado')
+    }
+    
+  }
+
+  orderByStatus(order) {
+    if(order === 'ASC') {
+      //criando um objeto de status e sua ordem para na lista
+      const statusOrder = {
+        'Em Atraso': 1,
+        'Em andamento': 2,
+        'Pendente': 3,
+        'Realizada': 4
+      }
+
+      this.tasks.sort((a, b) => {
+        const statusA = statusOrder[a.status()]
+        const statusB = statusOrder[b.status()]
+
+        return statusA - statusB
+      })
+    } else if (order === 'DEC') {
+      //criando um objeto de status e sua ordem para na lista
+      const statusOrder = {
+        'Em Atraso': 4,
+        'Em andamento': 3,
+        'Pendente': 2,
+        'Realizada': 1
+      }
+    
+      this.tasks.sort((a, b) => {
+        const statusA = statusOrder[a.status()]
+        const statusB = statusOrder[b.status()]
+    
+        return statusA - statusB
+      })
+    } else {
+      throw new Error('filtro não esperado')
+    }
+    
+  }
+
+  _generateRandomId() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     const idLength = 8 // Tamanho do id
     let randomId = ''

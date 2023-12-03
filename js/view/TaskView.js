@@ -1,12 +1,54 @@
 import Task from "../model/Task.js"
-import TaskService from "../services/TaskService.js"
-import UserService from "../services/UserService.js"
+import showToast from "../utils/toasts.js"
 
 class TaskView {
-  static generateTable(tasks) {
+  constructor(taskService) {
+    this.taskService = taskService
+    this.userEmail = taskService.userEmail
+  }
+
+  build() {
+    this.setForm()
+    this.generateTable()
+    this.handleFilter()
+  }
+
+  setForm() {
+    // Criando uma função onSubmit, para a criação de nova tarefa
+    let createTaskForm = document.getElementById('createTaskForm')
+    createTaskForm.onsubmit = (e) => {
+      e.preventDefault()
+      // Cada indice do srcElement é um dos inputs, na ordem que aparece
+      let taskName = e.srcElement[0].value
+      let taskStartDatetime = taskView.dateAndHourToDatehour(e.srcElement[1].value, e.srcElement[2].value)
+      let taskEndDatetime = taskView.dateAndHourToDatehour(e.srcElement[3].value, e.srcElement[4].value)
+      let TaskDescription = e.srcElement[5].value
+
+      // Aqui eu instâncio uma nova task
+      let task = new Task(null, taskName, taskStartDatetime, taskEndDatetime, TaskDescription, userEmail)
+      
+      // E uso o TaskService para adicionar essa task
+      let error = taskService.addTask(task)
+      if (error) {
+        showToast(`Erro ao cadastrar tarefa: ${error}`, 'text-bg-danger')
+        return
+      }
+      taskView.generateTable()
+
+      Array.from(e.srcElement).forEach(element => {
+        // limpar todos os campos menos o input submit
+        if (element.type === 'submit') return
+        element.value = ''
+      })
+
+      showToast('Tarefa Criada com sucesso!', 'text-bg-success')
+    }
+  }
+
+  generateTable() {
     let tableBody = document.getElementById("taskTableBody")
     tableBody.innerHTML = ''
-    tasks.forEach((task, indice) => {
+    this.taskService.tasks.forEach((task, indice) => {
       const trElement = document.createElement('tr')
 
       const tdName = document.createElement('td')
@@ -78,7 +120,7 @@ class TaskView {
     })
   }
 
-  static editModal(task) {
+  editModal(task) {
     document.getElementById("editTaskBtn").setAttribute('data-id', task.id)
     document.getElementById("completeTaskBtn").setAttribute('data-id', task.id)
     document.getElementById("deleteTaskBtn").setAttribute('data-id', task.id)
@@ -104,7 +146,7 @@ class TaskView {
     this.editTaskHandle()
   }
 
-  static getTaskFromEdit() {
+  getTaskFromEdit() {
     let editTaskName = document.getElementById("editTaskName").value
     let editTaskStartDate = document.getElementById("editTaskStartDate").value
     let editTaskStartHour = document.getElementById("editTaskStartHour").value
@@ -122,23 +164,92 @@ class TaskView {
     }
   }
 
-  static editTaskHandle() {
-    let userEmail = UserService.getSession()
+  _resetOthersFilters() {
+    let titleFilterBtn = document.getElementById('titleFilter')
+    let dateFilterBtn = document.getElementById('dateFilter')
+    let statusFilterBtn = document.getElementById('statusFilter')
+
+    Array.from([titleFilterBtn, dateFilterBtn, statusFilterBtn]).forEach(el => {
+      el.setAttribute('data-order', 'ASC')
+      el.setAttribute('data-selected', 'false')
+      el.classList.remove('active')
+      el.innerHTML = '<i class="fa fa-arrow-up"></i>'
+    })
+  }
+
+  handleFilter() {
+    let titleFilterBtn = document.getElementById('titleFilter')
+    let dateFilterBtn = document.getElementById('dateFilter')
+    let statusFilterBtn = document.getElementById('statusFilter')
+
+    Array.from([titleFilterBtn, dateFilterBtn, statusFilterBtn]).forEach((filterBtn, index) => {
+      filterBtn.onclick = () => {
+        let orderBy = ''
+        let dataOrder = filterBtn.getAttribute('data-order')
+        let active = filterBtn.getAttribute('data-selected') === 'true' ? true : false
+        this._resetOthersFilters()
+        filterBtn.setAttribute('data-selected', 'true')
+        filterBtn.classList.add('active')
+  
+        if (dataOrder === 'ASC') {
+          if (active) {
+            orderBy = 'DEC'
+            filterBtn.setAttribute('data-order', 'DEC')
+            filterBtn.innerHTML = '<i class="fa fa-arrow-down"></i>'
+          } else {
+            orderBy = 'ASC'
+            filterBtn.setAttribute('data-order', 'ASC')
+            filterBtn.innerHTML = '<i class="fa fa-arrow-up"></i>'
+          }
+        } else {
+          filterBtn.setAttribute('data-order', 'ASC')
+          orderBy = 'ASC'
+          filterBtn.innerHTML = '<i class="fa fa-arrow-up"></i>'
+        }
+        
+        if (index === 0) {
+          this.taskService.orderByTitle(orderBy)
+        } else if (index === 1) {
+          this.taskService.orderByDate(orderBy)
+        } else {
+          this.taskService.orderByStatus(orderBy)
+        }
+        
+        this.generateTable()
+      }
+    })
+
+    
+  }
+
+  editTaskHandle() {
     let editTaskBtn = document.getElementById("editTaskBtn")
     let completeTaskBtn =  document.getElementById("completeTaskBtn")
     let deleteTaskBtn =  document.getElementById("deleteTaskBtn")
   
     let taskId = document.getElementById("editTaskBtn").getAttribute('data-id')
-    let task = TaskService.getTaskFromId(userEmail, taskId)
+    let task = this.taskService.getTaskFromId(taskId)
     if (task.status() === 'Realizada') {
       completeTaskBtn.textContent = 'Marcar como Não Realizada'
-      completeTaskBtn.onclick = () => TaskService.undoCompleteTask(taskId, userEmail)
+      completeTaskBtn.onclick = () => {
+        this.taskService.undoCompleteTask(taskId)
+        this.generateTable()
+        showToast('Tarefa desmarcada como Realizada!', 'text-bg-warning')
+      }
     } else {
       completeTaskBtn.textContent = 'Marcar como Realizada'
-      completeTaskBtn.onclick = () => TaskService.setCompleteTask(taskId, userEmail)
+      completeTaskBtn.onclick = () => {
+        this.taskService.setCompleteTask(taskId)
+        this.generateTable()
+        showToast('Tarefa marcada como Realizada!', 'text-bg-success')
+      }
     }
   
-    deleteTaskBtn.onclick = () => TaskService.removeTask(taskId, userEmail)
+    deleteTaskBtn.onclick = () => {
+      this.taskService.removeTask(taskId)
+      this.generateTable()
+      showToast('Tarefa excluida com sucesso!', 'text-bg-danger')
+    }
   
     editTaskBtn.onclick = () => {
       let {
@@ -148,18 +259,20 @@ class TaskView {
         editTaskEndDate,
         editTaskEndHour,
         editTaskDescription
-      } = TaskView.getTaskFromEdit()
+      } = this.getTaskFromEdit()
   
-      let editTaskStartDatetime = TaskView.dateAndHourToDatehour(editTaskStartDate, editTaskStartHour)
-      let editTaskEndDatetime = TaskView.dateAndHourToDatehour(editTaskEndDate, editTaskEndHour)
+      let editTaskStartDatetime = this.dateAndHourToDatehour(editTaskStartDate, editTaskStartHour)
+      let editTaskEndDatetime = this.dateAndHourToDatehour(editTaskEndDate, editTaskEndHour)
       
-      let editTask = new Task(taskId, editTaskName, editTaskStartDatetime, editTaskEndDatetime, editTaskDescription, userEmail, task.status())
+      let editTask = new Task(taskId, editTaskName, editTaskStartDatetime, editTaskEndDatetime, editTaskDescription, this.userEmail, task.status())
   
-      TaskService.editTask(editTask)
+      this.taskService.editTask(editTask)
+      this.generateTable()
+      showToast('Tarefa alterada com sucesso!', 'text-bg-primary')
     }
   }
 
-  static formatDate(date) {
+  formatDate(date) {
     const dia = String(date.getDate()).padStart(2, '0')
     const mes = String(date.getMonth() + 1).padStart(2, '0') // Mês começa do zero
     const ano = date.getFullYear()
@@ -169,14 +282,14 @@ class TaskView {
     return `${dia}/${mes}/${ano} às ${hora}:${minutos}`
   }
 
-  static dateAndHourToDatehour(date, hour) {
+  dateAndHourToDatehour(date, hour) {
     const [day, month, year] = date.split('/')
     const [hours, minutes] = hour.split(':')
 
     return new Date(year, month - 1, day, hours, minutes)
   }
 
-  static dateHourToDateAndHour(date) {
+  dateHourToDateAndHour(date) {
     const dia = String(date.getDate()).padStart(2, '0')
     const mes = String(date.getMonth() + 1).padStart(2, '0')
     const ano = date.getFullYear()
