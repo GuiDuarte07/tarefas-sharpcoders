@@ -4,6 +4,10 @@
 
 https://www.youtube.com/watch?v=8qm2kkifLzg
 
+## Acessar o site via github pages:
+
+https://guiduarte07.github.io/tarefas-sharpcoders/
+
 ## **SharpCoders - Desafio de HTML, CSS, Bootstrap e JS**
 
 ### Detalhes sobre o projeto
