@@ -18,22 +18,23 @@ class TaskView {
     let createTaskForm = document.getElementById('createTaskForm')
     createTaskForm.onsubmit = (e) => {
       e.preventDefault()
+      console.log(e.srcElement[1].value, e.srcElement[2].value)
       // Cada indice do srcElement é um dos inputs, na ordem que aparece
       let taskName = e.srcElement[0].value
-      let taskStartDatetime = taskView.dateAndHourToDatehour(e.srcElement[1].value, e.srcElement[2].value)
-      let taskEndDatetime = taskView.dateAndHourToDatehour(e.srcElement[3].value, e.srcElement[4].value)
+      let taskStartDatetime = this.dateAndHourToDatehour(e.srcElement[1].value, e.srcElement[2].value)
+      let taskEndDatetime = this.dateAndHourToDatehour(e.srcElement[3].value, e.srcElement[4].value)
       let TaskDescription = e.srcElement[5].value
 
       // Aqui eu instâncio uma nova task
-      let task = new Task(null, taskName, taskStartDatetime, taskEndDatetime, TaskDescription, userEmail)
+      let task = new Task(null, taskName, taskStartDatetime, taskEndDatetime, TaskDescription, this.userEmail)
       
       // E uso o TaskService para adicionar essa task
-      let error = taskService.addTask(task)
+      let error = this.taskService.addTask(task)
       if (error) {
         showToast(`Erro ao cadastrar tarefa: ${error}`, 'text-bg-danger')
         return
       }
-      taskView.generateTable()
+      this.generateTable()
 
       Array.from(e.srcElement).forEach(element => {
         // limpar todos os campos menos o input submit

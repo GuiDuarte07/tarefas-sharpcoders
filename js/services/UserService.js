@@ -1,6 +1,17 @@
+import User from "../model/User.js"
+
 class UserService {
   static getUsers() {
-    return JSON.parse(localStorage.getItem("users"))
+    let usersJSON = JSON.parse(localStorage.getItem('users'))
+
+    if (!usersJSON) {
+      localStorage.setItem('users', "[]")
+      return []
+    }
+
+    return usersJSON.map(user => {
+      return new User(user.name, user.email, user.password)
+    })
   }
 
   static getUser(email) {

@@ -94,7 +94,6 @@ class TaskService {
     if (!name || name.length < 2) return 'Nome inválido'
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 'Data inválida'
-
     if(endDate < startDate) return 'Data de fim precisa ser maior que data de início'
 
     return null

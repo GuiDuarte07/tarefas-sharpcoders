@@ -52,8 +52,8 @@ function formsSubmit() {
     let users = UserService.getUsers()
 
 
+    console.log(users, email)
     for(let user of users) {
-      console.log(user, email)
       if (user.email === email) {
         showToast('Conta já existente, use outro e-mail', 'text-bg-danger')
         return
